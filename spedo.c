@@ -9,7 +9,7 @@
 
 #define VELOCITY_CONSTANT (WHEEL_CIRCUMFERENCE*60*60)
 
-#define ANIMATION_WELCOME_BACK_DELAY 10
+#define ANIMATION_WELCOME_BACK_DELAY 40
 
 // define characters for each segment
 int bits_L[10] = {
@@ -118,7 +118,16 @@ int main() {
                 // show welcome back message
             
                 // show animation!
-                int segs[8] = { 1,2,32,64,128,256,2048,4096 }; // circular animation
+                int segs[8] = { 
+                    0b1,
+                    0b10,
+                    0b100000,
+                    0b1000000,
+                    0b100000000,
+                    0b1000000000,
+                    0b1000000000000,
+                    0b10000000000000
+                }; // circular animation
                 for (int x = 0; x < 8; x++) {
                     gpio_clr_mask(mask);
                     mask = segs[x] << SEG_FIRST_GPIO;
