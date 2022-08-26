@@ -1,12 +1,11 @@
 #include <stdio.h>
 #include "pico/stdlib.h"
 #include "hardware/gpio.h"
-#include "pico/binary_info.h"
 
 #define REED_GPIO 22
 #define SEG_FIRST_GPIO 8
 
-#define WHEEL_CIRCUMFERENCE 2.23053078
+#define WHEEL_CIRCUMFERENCE 2.231
 
 #define VELOCITY_CONSTANT (WHEEL_CIRCUMFERENCE*60*60)
 
@@ -39,11 +38,6 @@ int bits_R[10] = {
 const uint LED_PIN = 25;
 
 int main() {
-    bi_decl(bi_program_description("This is a test binary."));
-    bi_decl(bi_1pin_with_name(LED_PIN, "On-board LED"));
-
-    stdio_init_all();
-
     gpio_init(LED_PIN);
     gpio_set_dir(LED_PIN, GPIO_OUT);
 
@@ -58,34 +52,52 @@ int main() {
         gpio_set_dir(gpio, GPIO_OUT);
     }
 
-    // counter (temp)
-    int i = 0;
-    float m = 0;
-    char buf[3]; // just the 2 digit rev counter and end of string
+    // init vars for the loop
     int32_t mask;
+    int t = 0;
+    int state = 0;
 
     while (1) {
-        if (!gpio_get(REED_GPIO)) {
-            m += WHEEL_CIRCUMFERENCE;
-            i++;
-            if (i >= 100) {
-                i = 0;
-            }
-            if (m >= 100) {
-                m = 0;
-            }
+        // increment the timer
+        sleep_ms(1); // TODO account for code execution time!
+        t++;
+        if (state == 0) {
+            if (!gpio_get(REED_GPIO)){ // reed closed
+                state = 1; 
+                // this is kinda now a state 0.5 (only run when entering state 1 from 0)
 
-            gpio_put(LED_PIN, 1);
+                // set the speed based on params
+                int v = VELOCITY_CONSTANT / t; // velocity in km/h
             
-            // remove previous display
-            gpio_clr_mask(mask);
-            // output to 7 seg
-            mask = (bits_L[((int)m)/10] | bits_R[((int)m)%10]) << SEG_FIRST_GPIO;
-            gpio_set_mask(mask);
+                // remove previous display, set new mask, and display
+                gpio_clr_mask(mask);
+                mask = (bits_L[v/10] | bits_R[v%10]) << SEG_FIRST_GPIO;
+                gpio_set_mask(mask);
 
-            sleep_ms(100); // TODO work out reasonable cooldown based on likely max speed
+                // reset time
+                t = 0;
+            } 
+            // else stay in current state
+            if (t > 5000) { // effectively stationary - turn display off
+                // remove previous display, set new mask, and display
+                gpio_clr_mask(mask);
+                mask = 0;
+                gpio_set_mask(mask);
+            }
+        }
+        if (state == 1) {
+            gpio_put(LED_PIN, 1);
+            sleep_ms(50);
+            t += 50;
             gpio_put(LED_PIN, 0);
-
+            state = 2;
+        }
+        if (state == 2) {
+            if (!gpio_get(REED_GPIO)){ // reed closed
+                state = 1;
+            } else { // reed open
+                state = 0;
+            }
         }
     }
 }
