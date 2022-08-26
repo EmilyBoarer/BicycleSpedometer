@@ -57,7 +57,7 @@ int main() {
     // init vars for the loop
     int32_t mask;
     int t = 0;
-    int state = 0;
+    int state = 3;
 
     while (1) {
         // increment the timer
