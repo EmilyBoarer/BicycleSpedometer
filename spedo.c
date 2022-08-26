@@ -62,7 +62,7 @@ int main() {
     int32_t mask;
     int t = 0;
     int state = 3;
-    int dist = 0; // distance in meters
+    float dist = 0; // distance in meters
 
     while (1) {
         // increment the timer
