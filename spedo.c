@@ -40,6 +40,10 @@ int bits_R[10] = {
 const uint LED_PIN = 25;
 
 int main() {
+    // init serial connection
+    stdio_init_all();
+
+    // init rev indicator LED
     gpio_init(LED_PIN);
     gpio_set_dir(LED_PIN, GPIO_OUT);
 
@@ -58,6 +62,7 @@ int main() {
     int32_t mask;
     int t = 0;
     int state = 3;
+    int dist = 0; // distance in meters
 
     while (1) {
         // increment the timer
@@ -70,6 +75,8 @@ int main() {
 
                 // set the speed based on params
                 int v = VELOCITY_CONSTANT / t; // velocity in km/h
+                dist += WHEEL_CIRCUMFERENCE; // add distance to the log
+                printf("%d m\n", (int)dist);
             
                 // remove previous display, set new mask, and display
                 gpio_clr_mask(mask);
