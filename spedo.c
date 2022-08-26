@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include "pico/stdlib.h"
 #include "hardware/gpio.h"
+#include <hardware/flash.h> // https://kevinboone.me/picoflash.html?i=2
 
 #define REED_GPIO 22
 #define SEG_FIRST_GPIO 8
@@ -11,8 +12,10 @@
 
 #define ANIMATION_WELCOME_BACK_DELAY 40
 
+#define FLASH_DIST_ADDRESS 0x100000
+
 // define characters for each segment
-int bits_L[10] = {
+const int bits_L[10] = {
     0b00011101110000,
     0b00010000010000,
     0b00001110110000,
@@ -24,7 +27,7 @@ int bits_L[10] = {
     0b00011111110000,
     0b00010011110000,
 };
-int bits_R[10] = {
+const int bits_R[10] = {
     0b11100000000111,
     0b10000000000001,
     0b01100000001011,
@@ -38,6 +41,11 @@ int bits_R[10] = {
 };
 
 const uint LED_PIN = 25;
+
+int read_total_dist_from_flash() { // TODO disable interrupts when interfacing with ROM ?
+    char* ptr = (char *)(XIP_BASE+FLASH_DIST_ADDRESS);
+    return (int) *ptr;
+}
 
 int main() {
     // init serial connection
@@ -63,6 +71,11 @@ int main() {
     int t = 0;
     int state = 3;
     float dist = 0; // distance in meters
+
+    sleep_ms(2000); // takes time before first USB transmission can occur, else it is just lost :'(
+    // print out initial stored distance from ROM
+    printf("Total distance recorded so far:\n");
+    printf("%d m\n", read_total_dist_from_flash());
 
     while (1) {
         // increment the timer
