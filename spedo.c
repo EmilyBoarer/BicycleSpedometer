@@ -9,6 +9,8 @@
 
 #define VELOCITY_CONSTANT (WHEEL_CIRCUMFERENCE*60*60)
 
+#define ANIMATION_WELCOME_BACK_DELAY 10
+
 // define characters for each segment
 int bits_L[10] = {
     0b00011101110000,
@@ -61,7 +63,7 @@ int main() {
         // increment the timer
         sleep_ms(1); // TODO account for code execution time!
         t++;
-        if (state == 0) {
+        if (state == 0) { // reed-open state
             if (!gpio_get(REED_GPIO)){ // reed closed
                 state = 1; 
                 // this is kinda now a state 0.5 (only run when entering state 1 from 0)
@@ -82,26 +84,55 @@ int main() {
                 t = 0;
             } 
             // else stay in current state
-            if (t > 5000) { // effectively stationary - turn display off
+            if (t > 5000) { // effectively stationary - turn display to dashes
+                // remove previous display, set new mask, and display
+                gpio_clr_mask(mask);
+                mask = 0b10001000 << SEG_FIRST_GPIO;
+                gpio_set_mask(mask);
+            }
+            if (t > 10000) { // effectively stationary - turn display off
                 // remove previous display, set new mask, and display
                 gpio_clr_mask(mask);
                 mask = 0;
                 gpio_set_mask(mask);
+                state = 3;
             }
         }
-        if (state == 1) {
+        if (state == 1) { // in reed-closed state
             gpio_put(LED_PIN, 1);
             sleep_ms(50);
             t += 50;
             gpio_put(LED_PIN, 0);
             state = 2;
         }
-        if (state == 2) {
+        if (state == 2) { // trying to leave reed-closed state
             if (!gpio_get(REED_GPIO)){ // reed closed
                 state = 1;
             } else { // reed open
                 state = 0;
             }
+        }
+        if (state == 3) { // stationary reed-open state
+            if (!gpio_get(REED_GPIO)){ // reed closed
+                state = 1; 
+                // show welcome back message
+            
+                // show animation!
+                int segs[8] = { 1,2,32,64,128,256,2048,4096 }; // circular animation
+                for (int x = 0; x < 8; x++) {
+                    gpio_clr_mask(mask);
+                    mask = segs[x] << SEG_FIRST_GPIO;
+                    gpio_set_mask(mask);
+                    sleep_ms(ANIMATION_WELCOME_BACK_DELAY);
+                }
+                // set to an initial zero
+                gpio_clr_mask(mask);
+                mask = (bits_L[0] | bits_R[0]) << SEG_FIRST_GPIO;
+                gpio_set_mask(mask);
+
+                // reset time
+                t = ANIMATION_WELCOME_BACK_DELAY*8;
+            } 
         }
     }
 }
