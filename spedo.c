@@ -71,7 +71,11 @@ int main() {
             
                 // remove previous display, set new mask, and display
                 gpio_clr_mask(mask);
-                mask = (bits_L[v/10] | bits_R[v%10]) << SEG_FIRST_GPIO;
+                if (v >= 10) {
+                    mask = (bits_L[v/10] | bits_R[v%10]) << SEG_FIRST_GPIO;
+                } else {
+                    mask = bits_R[v%10] << SEG_FIRST_GPIO;
+                }
                 gpio_set_mask(mask);
 
                 // reset time
