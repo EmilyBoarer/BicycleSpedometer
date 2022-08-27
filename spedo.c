@@ -43,20 +43,20 @@ const int bits_R[10] = {
 const uint LED_PIN = 25;
 
 int read_total_dist_from_flash() { // TODO disable interrupts when interfacing with ROM ?
-    char* ptr = (char *)(XIP_BASE+FLASH_DIST_ADDRESS);
-    return (int) *ptr;
+    const int* ptr = (int *)(XIP_BASE+FLASH_DIST_ADDRESS);
+    return *ptr;
 }
 
 void write_total_dist_to_flash(int d) {
     // convert data to buffer
     uint8_t buf[FLASH_PAGE_SIZE];
     for (int i = 0; i < FLASH_PAGE_SIZE; ++i) {
-        buf[i] = 0;
+        buf[i] = 7;
     }
-    for (int i=0; i<sizeof(int); i++) {
-        buf[i] = d & 0xff;
-        d >>= 8;
-    }
+    // for (int i=0; i<sizeof(int); i++) {
+    //     buf[i] = d & 0xff;
+    //     d >>= 8;
+    // }
     // store
     flash_range_program (FLASH_DIST_ADDRESS, buf, FLASH_PAGE_SIZE); // 256 bytes buffers
 }
