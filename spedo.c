@@ -123,14 +123,14 @@ int main() {
             if (t > 5000) { // effectively stationary - turn display to dashes
                 // remove previous display, set new mask, and display
                 gpio_clr_mask(mask);
-                mask = 0b10001000 << SEG_FIRST_GPIO;
+                mask = bits_R[0] << SEG_FIRST_GPIO; // 0b10001000 for dashes -- set to zero because it needs to be consuming enough power for power bank to not turn off!
                 gpio_set_mask(mask);
             }
             if (t > 10000) { // effectively stationary - turn display off
-                // remove previous display, set new mask, and display
-                gpio_clr_mask(mask);
-                mask = 0;
-                gpio_set_mask(mask);
+                // // remove previous display, set new mask, and display
+                // gpio_clr_mask(mask);
+                // mask = 0;
+                // gpio_set_mask(mask);
                 state = 3;
             }
         }
@@ -172,7 +172,7 @@ int main() {
                 }
                 // set to an initial zero
                 gpio_clr_mask(mask);
-                mask = (bits_L[0] | bits_R[0]) << SEG_FIRST_GPIO;
+                mask = bits_R[0] << SEG_FIRST_GPIO;
                 gpio_set_mask(mask);
 
                 // reset time
