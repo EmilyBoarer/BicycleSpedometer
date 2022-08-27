@@ -47,6 +47,20 @@ int read_total_dist_from_flash() { // TODO disable interrupts when interfacing w
     return (int) *ptr;
 }
 
+void write_total_dist_to_flash(int d) {
+    // convert data to buffer
+    uint8_t buf[FLASH_PAGE_SIZE];
+    for (int i = 0; i < FLASH_PAGE_SIZE; ++i) {
+        buf[i] = 0;
+    }
+    for (int i=0; i<sizeof(int); i++) {
+        buf[i] = d & 0xff;
+        d >>= 8;
+    }
+    // store
+    flash_range_program (FLASH_DIST_ADDRESS, buf, FLASH_PAGE_SIZE); // 256 bytes buffers
+}
+
 int main() {
     // init serial connection
     stdio_init_all();
@@ -71,6 +85,8 @@ int main() {
     int t = 0;
     int state = 3;
     float dist = 0; // distance in meters
+
+    write_total_dist_to_flash(123456);
 
     sleep_ms(2000); // takes time before first USB transmission can occur, else it is just lost :'(
     // print out initial stored distance from ROM
