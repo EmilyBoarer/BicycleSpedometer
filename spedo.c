@@ -42,24 +42,24 @@ const int bits_R[10] = {
 
 const uint LED_PIN = 25;
 
-int read_total_dist_from_flash() { // TODO disable interrupts when interfacing with ROM ?
-    const int* ptr = (int *)(XIP_BASE+FLASH_DIST_ADDRESS);
-    return *ptr;
-}
+// int read_total_dist_from_flash() { // TODO disable interrupts when interfacing with ROM ?
+//     const int* ptr = (int *)(XIP_BASE+FLASH_DIST_ADDRESS);
+//     return *ptr;
+// }
 
-void write_total_dist_to_flash(int d) {
-    // convert data to buffer
-    uint8_t buf[FLASH_PAGE_SIZE];
-    for (int i = 0; i < FLASH_PAGE_SIZE; ++i) {
-        buf[i] = 7;
-    }
-    // for (int i=0; i<sizeof(int); i++) {
-    //     buf[i] = d & 0xff;
-    //     d >>= 8;
-    // }
-    // store
-    flash_range_program (FLASH_DIST_ADDRESS, buf, FLASH_PAGE_SIZE); // 256 bytes buffers
-}
+// void write_total_dist_to_flash(int d) {
+//     // convert data to buffer
+//     uint8_t buf[FLASH_PAGE_SIZE];
+//     for (int i = 0; i < FLASH_PAGE_SIZE; ++i) {
+//         buf[i] = 7;
+//     }
+//     // for (int i=0; i<sizeof(int); i++) {
+//     //     buf[i] = d & 0xff;
+//     //     d >>= 8;
+//     // }
+//     // store
+//     flash_range_program (FLASH_DIST_ADDRESS, buf, FLASH_PAGE_SIZE); // 256 bytes buffers
+// }
 
 int main() {
     // init serial connection
@@ -86,12 +86,12 @@ int main() {
     int state = 3;
     float dist = 0; // distance in meters
 
-    write_total_dist_to_flash(123456);
 
-    sleep_ms(2000); // takes time before first USB transmission can occur, else it is just lost :'(
-    // print out initial stored distance from ROM
-    printf("Total distance recorded so far:\n");
-    printf("%d m\n", read_total_dist_from_flash());
+    // sleep_ms(2000); // takes time before first USB transmission can occur, else it is just lost :'(
+    // write_total_dist_to_flash(123456);
+    // // print out initial stored distance from ROM
+    // printf("Total distance recorded so far:\n");
+    // printf("%d m\n", read_total_dist_from_flash());
 
     while (1) {
         // increment the timer
@@ -127,10 +127,10 @@ int main() {
                 gpio_set_mask(mask);
             }
             if (t > 10000) { // effectively stationary - turn display off
-                // // remove previous display, set new mask, and display
-                // gpio_clr_mask(mask);
-                // mask = 0;
-                // gpio_set_mask(mask);
+                // remove previous display, set new mask, and display
+                gpio_clr_mask(mask);
+                mask = 0b1000 << SEG_FIRST_GPIO;
+                gpio_set_mask(mask);
                 state = 3;
             }
         }
