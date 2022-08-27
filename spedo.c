@@ -86,6 +86,9 @@ int main() {
     int state = 3;
     float dist = 0; // distance in meters
 
+    // set initial state to single dash (normal resting state)
+    mask = 0b1000 << SEG_FIRST_GPIO;
+    gpio_set_mask(mask);
 
     // sleep_ms(2000); // takes time before first USB transmission can occur, else it is just lost :'(
     // write_total_dist_to_flash(123456);
