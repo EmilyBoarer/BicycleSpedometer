@@ -90,6 +90,9 @@ int main() {
     mask = 0b1000 << SEG_FIRST_GPIO;
     gpio_set_mask(mask);
 
+    sleep_ms(2000);
+    printf("Hello World! Ready to start cycling!\n");
+
     // sleep_ms(2000); // takes time before first USB transmission can occur, else it is just lost :'(
     // write_total_dist_to_flash(123456);
     // // print out initial stored distance from ROM
@@ -108,7 +111,7 @@ int main() {
                 // set the speed based on params
                 int v = VELOCITY_CONSTANT / t; // velocity in km/h
                 dist += WHEEL_CIRCUMFERENCE; // add distance to the log
-                printf("%d m\n", (int)dist);
+                printf("%d km/h = %d mph | %d m\n", v, (int) (v*0.62), (int)dist);
             
                 // remove previous display, set new mask, and display
                 gpio_clr_mask(mask);
@@ -123,11 +126,12 @@ int main() {
                 t = 0;
             } 
             // else stay in current state
-            if (t > 5000) { // effectively stationary - turn display to dashes
+            if (t == 5000) { // effectively stationary - turn display to dashes
                 // remove previous display, set new mask, and display
                 gpio_clr_mask(mask);
                 mask = bits_R[0] << SEG_FIRST_GPIO; // 0b10001000 for dashes -- set to zero because it needs to be consuming enough power for power bank to not turn off!
                 gpio_set_mask(mask);
+                printf("0 km/h = 0 mph | %d m\n", (int)dist);
             }
             if (t > 10000) { // effectively stationary - turn display off
                 // remove previous display, set new mask, and display
@@ -135,6 +139,7 @@ int main() {
                 mask = 0b1000 << SEG_FIRST_GPIO;
                 gpio_set_mask(mask);
                 state = 3;
+                printf("----- STOPPED -----\n");
             }
         }
         if (state == 1) { // in reed-closed state
@@ -155,6 +160,7 @@ int main() {
             if (!gpio_get(REED_GPIO)){ // reed closed
                 state = 1; 
                 // show welcome back message
+                printf("----- STARTING -----\n");
             
                 // show animation!
                 int segs[8] = { 
