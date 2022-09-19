@@ -105,22 +105,36 @@ int main() {
         gpio_set_dir(gpio, GPIO_OUT);
     }
 
-    // INIT MAINLOOP ---------------------------------------------------------------
-
-    int t = 0; // time in milliseconds since power on
-    int state = 3; // internal state used to determine if moving or not etc...
-    float dist = 0; // distance in meters
-
     // set initial segments to single dash (normal resting state)
     int32_t mask;
     mask = 0b1000 << SEG_FIRST_GPIO;
     gpio_set_mask(mask);
 
+    // INIT MAINLOOP ---------------------------------------------------------------
+
+    int t = 0; // time in milliseconds since last complete revolution of the wheel
+    int state = 3; // internal state used to determine if moving or not etc...
+    float dist = 0; // distance in meters
+
+    int time = 0; // current time tracker (like t, but never reset)
+    int all_time = 0; // time in seconds since power on
+    int moving_time = 0; // time in seconds that have been in motion
+
     while (1) {
-        // increment the timer
+        // increment the timers
         sleep_ms(1); // TODO account for code execution time!
         t++;
-        // TODO add to output time counters
+        time++;
+        // update time counters
+        if (time > 1000) { 
+            // then it must have been at least 1 second since last updated - so add 1 second to counters
+            time -= 1000; // subtract in case it is like 1.05 seconds (for accuracy)
+            all_time++;
+            if (state < 3) {
+                // only update if moving
+                moving_time++;
+            }
+        }
 
         if (state == 0) { // reed-open state
             if (!gpio_get(REED_GPIO)){ // reed closed
@@ -140,6 +154,8 @@ int main() {
                     mask = bits_R[v%10] << SEG_FIRST_GPIO;
                 }
                 gpio_set_mask(mask);
+
+                draw_oled(disp, (int)dist, all_time, moving_time, (int) (3.6*(dist / moving_time)), (int) (v*0.62));
 
                 // reset time
                 t = 0;
@@ -166,6 +182,7 @@ int main() {
             gpio_put(LED_PIN, 1);
             sleep_ms(50);
             t += 50;
+            time += 50;
             gpio_put(LED_PIN, 0);
             state = 2;
         }
@@ -208,6 +225,7 @@ int main() {
 
                 // reset time
                 t = ANIMATION_WELCOME_BACK_DELAY*8;
+                time += ANIMATION_WELCOME_BACK_DELAY*8; // don't reset this one!
             } 
         }
     }
