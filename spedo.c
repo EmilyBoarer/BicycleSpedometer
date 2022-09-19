@@ -88,7 +88,7 @@ int main() {
     ssd1306_init(&disp, 128, 64, 0x3C, DISPLAY_I2C);
 
     // Show test screen
-    draw_oled(disp, 1, 2, 3, 4, 5);
+    draw_oled(disp, 0, 0, 0, 0, 0);
 
     // init rev indicator LED
     gpio_init(LED_PIN);
@@ -195,7 +195,9 @@ int main() {
             }
         }
         if (state == 3) { // stationary reed-open state
-            // do nothing, unless starting up again:
+            // only update oled...
+            draw_oled(disp, (int)dist, all_time, moving_time, (int) (3.6*(dist / moving_time)), 0);
+            // ...unless starting up again:
             if (!gpio_get(REED_GPIO)){ // reed closed
                 state = 1; 
                 // show welcome back message
