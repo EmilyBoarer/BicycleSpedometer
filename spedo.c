@@ -47,6 +47,28 @@ const int bits_R[10] = {
 
 const uint LED_PIN = 25;
 
+void draw_oled(ssd1306_t disp, int dist, int mins_all, int mins_moving, int av_speed, int curr_speed_miles) {
+    char str[20];
+    ssd1306_clear(&disp);
+    sprintf(str, "%d", dist);
+    ssd1306_draw_string(&disp, 0, 0, 1, str);
+    ssd1306_draw_string(&disp, 50, 0, 1, "metres");
+    sprintf(str, "%d", mins_all);
+    ssd1306_draw_string(&disp, 0, 10, 1, str);
+    ssd1306_draw_string(&disp, 50, 10, 1, "minutes,");
+    sprintf(str, "%d", mins_moving);
+    ssd1306_draw_string(&disp, 0, 20, 1, str);
+    ssd1306_draw_string(&disp, 50, 20, 1, "moving");
+    sprintf(str, "%d", av_speed);
+    ssd1306_draw_string(&disp, 0, 30, 1, str);
+    ssd1306_draw_string(&disp, 50, 30, 1, "km/h avg.");
+    ssd1306_draw_string(&disp, 0, 50, 2, "km/h");
+    sprintf(str, "%d", curr_speed_miles);
+    ssd1306_draw_string(&disp, 80, 57, 1, str);
+    ssd1306_draw_string(&disp, 105, 57, 1, "mph");
+    ssd1306_show(&disp);
+}
+
 int main() {
     // init serial connection
     stdio_init_all();
@@ -63,19 +85,7 @@ int main() {
     ssd1306_init(&disp, 128, 64, 0x3C, DISPLAY_I2C);
 
     // Show test screen
-    ssd1306_clear(&disp);
-    ssd1306_draw_string(&disp, 0, 0, 1, "0");
-    ssd1306_draw_string(&disp, 50, 0, 1, "metres");
-    ssd1306_draw_string(&disp, 0, 10, 1, "0");
-    ssd1306_draw_string(&disp, 50, 10, 1, "minutes,");
-    ssd1306_draw_string(&disp, 0, 20, 1, "0");
-    ssd1306_draw_string(&disp, 50, 20, 1, "moving");
-    ssd1306_draw_string(&disp, 0, 30, 1, "0");
-    ssd1306_draw_string(&disp, 50, 30, 1, "km/h avg.");
-    ssd1306_draw_string(&disp, 0, 50, 2, "km/h");
-    ssd1306_draw_string(&disp, 80, 57, 1, "0");
-    ssd1306_draw_string(&disp, 105, 57, 1, "mph");
-    ssd1306_show(&disp);
+    draw_oled(disp, 1, 2, 3, 4, 5);
 
     // init rev indicator LED
     gpio_init(LED_PIN);
