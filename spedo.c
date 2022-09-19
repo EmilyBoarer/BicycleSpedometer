@@ -64,8 +64,17 @@ int main() {
 
     // Show test screen
     ssd1306_clear(&disp);
-    ssd1306_draw_string(&disp, 0, 0, 1, "Hello, World!");
-    ssd1306_draw_string(&disp, 0, 64-7, 1, "Line 2 ...");
+    ssd1306_draw_string(&disp, 0, 0, 1, "0");
+    ssd1306_draw_string(&disp, 50, 0, 1, "metres");
+    ssd1306_draw_string(&disp, 0, 10, 1, "0");
+    ssd1306_draw_string(&disp, 50, 10, 1, "minutes,");
+    ssd1306_draw_string(&disp, 0, 20, 1, "0");
+    ssd1306_draw_string(&disp, 50, 20, 1, "moving");
+    ssd1306_draw_string(&disp, 0, 30, 1, "0");
+    ssd1306_draw_string(&disp, 50, 30, 1, "km/h avg.");
+    ssd1306_draw_string(&disp, 0, 50, 2, "km/h");
+    ssd1306_draw_string(&disp, 80, 57, 1, "0");
+    ssd1306_draw_string(&disp, 105, 57, 1, "mph");
     ssd1306_show(&disp);
 
     // init rev indicator LED
