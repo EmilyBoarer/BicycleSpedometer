@@ -16,4 +16,6 @@ pico_enable_stdio_uart(spedo 1)
 
 pico_add_extra_outputs(spedo)
 
-target_link_libraries(spedo pico_stdlib hardware_gpio hardware_flash hardware_sync)
+add_subdirectory(extern/pico-ssd1306)
+
+target_link_libraries(spedo pico_stdlib hardware_gpio hardware_i2c pico-ssd1306)

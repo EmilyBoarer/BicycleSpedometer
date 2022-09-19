@@ -1,7 +1,10 @@
 #include <stdio.h>
 #include "pico/stdlib.h"
 #include "hardware/gpio.h"
-#include <hardware/flash.h> // https://kevinboone.me/picoflash.html?i=2
+
+#include "hardware/i2c.h"
+// from https://github.com/daschr/pico-ssd1306 (owner doesn't have a proper way to add project, instructs to just copy files in manually)
+#include "extern/pico-ssd1306/src/ssd1306.h"
 
 #define REED_GPIO 22
 #define SEG_FIRST_GPIO 8
@@ -12,7 +15,9 @@
 
 #define ANIMATION_WELCOME_BACK_DELAY 40
 
-#define FLASH_DIST_ADDRESS 0x100000
+#define DISPLAY_I2C i2c0
+#define DISPLAY_I2C_SCL 5
+#define DISPLAY_I2C_SDA 4
 
 // define characters for each segment
 const int bits_L[10] = {
@@ -42,28 +47,26 @@ const int bits_R[10] = {
 
 const uint LED_PIN = 25;
 
-// int read_total_dist_from_flash() { // TODO disable interrupts when interfacing with ROM ?
-//     const int* ptr = (int *)(XIP_BASE+FLASH_DIST_ADDRESS);
-//     return *ptr;
-// }
-
-// void write_total_dist_to_flash(int d) {
-//     // convert data to buffer
-//     uint8_t buf[FLASH_PAGE_SIZE];
-//     for (int i = 0; i < FLASH_PAGE_SIZE; ++i) {
-//         buf[i] = 7;
-//     }
-//     // for (int i=0; i<sizeof(int); i++) {
-//     //     buf[i] = d & 0xff;
-//     //     d >>= 8;
-//     // }
-//     // store
-//     flash_range_program (FLASH_DIST_ADDRESS, buf, FLASH_PAGE_SIZE); // 256 bytes buffers
-// }
-
 int main() {
     // init serial connection
     stdio_init_all();
+
+    // init OLED
+    i2c_init(DISPLAY_I2C, 400000);
+    gpio_set_function(DISPLAY_I2C_SCL, GPIO_FUNC_I2C);
+    gpio_set_function(DISPLAY_I2C_SDA, GPIO_FUNC_I2C);
+    gpio_pull_up(DISPLAY_I2C_SCL);
+    gpio_pull_up(DISPLAY_I2C_SDA);
+
+    ssd1306_t disp;
+    disp.external_vcc=false;
+    ssd1306_init(&disp, 128, 64, 0x3C, DISPLAY_I2C);
+
+    // Show test screen
+    ssd1306_clear(&disp);
+    ssd1306_draw_string(&disp, 0, 0, 1, "Hello, World!");
+    ssd1306_draw_string(&disp, 0, 64-7, 1, "Line 2 ...");
+    ssd1306_show(&disp);
 
     // init rev indicator LED
     gpio_init(LED_PIN);
@@ -92,12 +95,6 @@ int main() {
 
     sleep_ms(2000);
     printf("Hello World! Ready to start cycling!\n");
-
-    // sleep_ms(2000); // takes time before first USB transmission can occur, else it is just lost :'(
-    // write_total_dist_to_flash(123456);
-    // // print out initial stored distance from ROM
-    // printf("Total distance recorded so far:\n");
-    // printf("%d m\n", read_total_dist_from_flash());
 
     while (1) {
         // increment the timer
