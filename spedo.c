@@ -70,6 +70,9 @@ void draw_oled(ssd1306_t disp, int dist, int mins_all, int mins_moving, int av_s
 }
 
 int main() {
+
+    // INIT HARDWARE ---------------------------------------------------------------
+
     // init serial connection
     stdio_init_all();
 
@@ -102,23 +105,23 @@ int main() {
         gpio_set_dir(gpio, GPIO_OUT);
     }
 
-    // init vars for the loop
-    int32_t mask;
-    int t = 0;
-    int state = 3;
+    // INIT MAINLOOP ---------------------------------------------------------------
+
+    int t = 0; // time in milliseconds since power on
+    int state = 3; // internal state used to determine if moving or not etc...
     float dist = 0; // distance in meters
 
-    // set initial state to single dash (normal resting state)
+    // set initial segments to single dash (normal resting state)
+    int32_t mask;
     mask = 0b1000 << SEG_FIRST_GPIO;
     gpio_set_mask(mask);
-
-    sleep_ms(2000);
-    printf("Hello World! Ready to start cycling!\n");
 
     while (1) {
         // increment the timer
         sleep_ms(1); // TODO account for code execution time!
         t++;
+        // TODO add to output time counters
+
         if (state == 0) { // reed-open state
             if (!gpio_get(REED_GPIO)){ // reed closed
                 state = 1; 
@@ -159,6 +162,7 @@ int main() {
             }
         }
         if (state == 1) { // in reed-closed state
+            // flash the onboard led for 50ms, add that to the timer
             gpio_put(LED_PIN, 1);
             sleep_ms(50);
             t += 50;
@@ -166,6 +170,7 @@ int main() {
             state = 2;
         }
         if (state == 2) { // trying to leave reed-closed state
+            // check constantly to see when the passing of the magnet is over
             if (!gpio_get(REED_GPIO)){ // reed closed
                 state = 1;
             } else { // reed open
@@ -173,6 +178,7 @@ int main() {
             }
         }
         if (state == 3) { // stationary reed-open state
+            // do nothing, unless starting up again:
             if (!gpio_get(REED_GPIO)){ // reed closed
                 state = 1; 
                 // show welcome back message
