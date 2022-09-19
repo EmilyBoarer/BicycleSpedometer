@@ -118,7 +118,9 @@ int main() {
 
     int time = 0; // current time tracker (like t, but never reset)
     int all_time = 0; // time in seconds since power on
-    int moving_time = 0; // time in seconds that have been in motion
+    int moving_time = 1; // time in seconds that have been in motion (init to 1 to prevent /0 errors, still appears as 0mins on display)
+
+    int mph = 0; // used only to store current speed for the conversion so can be used in optimised rendering times
 
     while (1) {
         // increment the timers
@@ -134,6 +136,8 @@ int main() {
                 // only update if moving
                 moving_time++;
             }
+            // only update OLED every so often, since it takes a little while to update it it slows down the mainloop considerably if updated every 'millisecond'
+            draw_oled(disp, (int)dist, (int)(all_time/60), (int)(moving_time/60), (int) (3.6*(dist / moving_time)), mph);
         }
 
         if (state == 0) { // reed-open state
@@ -155,7 +159,8 @@ int main() {
                 }
                 gpio_set_mask(mask);
 
-                draw_oled(disp, (int)dist, all_time, moving_time, (int) (3.6*(dist / moving_time)), (int) (v*0.62));
+                mph = (int) (v*0.62);
+                draw_oled(disp, (int)dist, (int)(all_time/60), (int)(moving_time/60), (int) (3.6*(dist / moving_time)), mph);
 
                 // reset time
                 t = 0;
@@ -174,6 +179,7 @@ int main() {
                 mask = 0b1000 << SEG_FIRST_GPIO;
                 gpio_set_mask(mask);
                 state = 3;
+                mph = 0;
                 printf("----- STOPPED -----\n");
             }
         }
@@ -195,9 +201,7 @@ int main() {
             }
         }
         if (state == 3) { // stationary reed-open state
-            // only update oled...
-            draw_oled(disp, (int)dist, all_time, moving_time, (int) (3.6*(dist / moving_time)), 0);
-            // ...unless starting up again:
+            // do nothing, unless starting up again:
             if (!gpio_get(REED_GPIO)){ // reed closed
                 state = 1; 
                 // show welcome back message
