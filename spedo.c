@@ -47,7 +47,7 @@ const int bits_R[10] = {
 
 const uint LED_PIN = 25;
 
-void draw_oled(ssd1306_t disp, int dist, int mins_all, int mins_moving, int av_speed, int curr_speed_miles) {
+void draw_oled(ssd1306_t disp, int dist, int mins_all, int mins_moving, int av_speed, int max_speed, int curr_speed_miles) {
     char str[20];
     ssd1306_clear(&disp);
     sprintf(str, "%d", dist);
@@ -62,6 +62,9 @@ void draw_oled(ssd1306_t disp, int dist, int mins_all, int mins_moving, int av_s
     sprintf(str, "%d", av_speed);
     ssd1306_draw_string(&disp, 0, 30, 1, str);
     ssd1306_draw_string(&disp, 50, 30, 1, "km/h avg.");
+    sprintf(str, "%d", max_speed);
+    ssd1306_draw_string(&disp, 0, 40, 1, str);
+    ssd1306_draw_string(&disp, 50, 40, 1, "km/h max.");
     ssd1306_draw_string(&disp, 0, 50, 2, "km/h");
     sprintf(str, "%d", curr_speed_miles);
     ssd1306_draw_string(&disp, 80, 57, 1, str);
@@ -88,7 +91,7 @@ int main() {
     ssd1306_init(&disp, 128, 64, 0x3C, DISPLAY_I2C);
 
     // Show test screen
-    draw_oled(disp, 0, 0, 0, 0, 0);
+    draw_oled(disp, 0, 0, 0, 0, 0, 0);
 
     // init rev indicator LED
     gpio_init(LED_PIN);
@@ -116,6 +119,8 @@ int main() {
     int state = 3; // internal state used to determine if moving or not etc...
     float dist = 0; // distance in meters
 
+    int max_v = 0; // highest speed reached since power on
+
     int time = 0; // current time tracker (like t, but never reset)
     int all_time = 0; // time in seconds since power on
     int moving_time = 1; // time in seconds that have been in motion (init to 1 to prevent /0 errors, still appears as 0mins on display)
@@ -137,7 +142,7 @@ int main() {
                 moving_time++;
             }
             // only update OLED every so often, since it takes a little while to update it it slows down the mainloop considerably if updated every 'millisecond'
-            draw_oled(disp, (int)dist, (int)(all_time/60), (int)(moving_time/60), (int) (3.6*(dist / moving_time)), mph);
+            draw_oled(disp, (int)dist, (int)(all_time/60), (int)(moving_time/60), (int) (3.6*(dist / moving_time)), max_v, mph);
         }
 
         if (state == 0) { // reed-open state
@@ -159,8 +164,12 @@ int main() {
                 }
                 gpio_set_mask(mask);
 
+                if (v > max_v) {
+                    max_v = v;
+                }
+
                 mph = (int) (v*0.62);
-                draw_oled(disp, (int)dist, (int)(all_time/60), (int)(moving_time/60), (int) (3.6*(dist / moving_time)), mph);
+                draw_oled(disp, (int)dist, (int)(all_time/60), (int)(moving_time/60), (int) (3.6*(dist / moving_time)), max_v, mph);
 
                 // reset time
                 t = 0;
