@@ -130,6 +130,12 @@ int main() {
     absolute_time_t prev_loop_iter_time_usec = get_absolute_time();
 
     while (1) {
+        // account for if took over 1 millisecond for prev loop cycle
+        while (absolute_time_diff_us(prev_loop_iter_time_usec, get_absolute_time()) > 1000) {
+            t++;
+            time++;
+            prev_loop_iter_time_usec = delayed_by_ms(prev_loop_iter_time_usec,1);
+        }
         // make sure exactly 1 millisecond has elapsed since timers were last incremented
         sleep_until(delayed_by_ms(prev_loop_iter_time_usec,1)); // sleep for up to 1ms
         prev_loop_iter_time_usec = get_absolute_time();  // start timer for next cycle of the mainloop
