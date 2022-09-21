@@ -127,9 +127,13 @@ int main() {
 
     int mph = 0; // used only to store current speed for the conversion so can be used in optimised rendering times
 
+    absolute_time_t prev_loop_iter_time_usec = get_absolute_time();
+
     while (1) {
+        // make sure exactly 1 millisecond has elapsed since timers were last incremented
+        sleep_until(delayed_by_ms(prev_loop_iter_time_usec,1)); // sleep for up to 1ms
+        prev_loop_iter_time_usec = get_absolute_time();  // start timer for next cycle of the mainloop
         // increment the timers
-        sleep_ms(1); // TODO account for code execution time!
         t++;
         time++;
         // update time counters
